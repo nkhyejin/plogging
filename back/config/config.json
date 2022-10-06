@@ -1,23 +1,23 @@
 {
   "development": {
-    "username": "root",
+    "username": "team09",
     "password": "elice05team09",
     "database": "plogging",
-    "host": "192.168.219.106",
+    "host": "34.64.166.205",
     "dialect": "mysql"
   },
   "test": {
-    "username": "root",
+    "username": "team09",
     "password": null,
-    "database": "plogging_test",
-    "host": "127.0.0.1",
+    "database": "plogging",
+    "host": "34.64.166.205",
     "dialect": "mysql"
   },
   "production": {
-    "username": "root",
+    "username": "team09",
     "password": null,
-    "database": "plogging_production",
-    "host": "127.0.0.1",
+    "database": "plogging",
+    "host": "34.64.166.205",
     "dialect": "mysql"
   }
 }
