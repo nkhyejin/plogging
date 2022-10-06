@@ -52,7 +52,7 @@ const fs = require("fs");
 const { sequelize } = require("./models");
 
 const app = express();
-app.set("port", 80);
+app.set("port", 3306);
 
 sequelize
   .sync({ force: false })
