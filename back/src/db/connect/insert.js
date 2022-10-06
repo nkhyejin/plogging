@@ -6,6 +6,13 @@ var data = require("../../../../data/trash_can/json/trash_count.json");
 
 var x = data.data;
 
+// maria.query(
+//   `CREATE TABLE TRASHCOUNT (
+//   borough VARCHAR(5),
+//   category VARCHAR(10),
+//   count INT(11))`,
+// );
+
 for (i = 0; i < x.length; i++) {
   maria.query("INSERT INTO TRASHCOUNT(borough, category, count) VALUES(?,?,?)", [
     x[i].borough,
