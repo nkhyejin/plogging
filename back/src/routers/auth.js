@@ -80,32 +80,16 @@ router.get("/kakao/info/:access_token", async function (req, res, next) {
 
       const email = result.data.kakao_account?.email ?? "kakao" + result.data.id;
 
-      maria.query("SELECT * FROM USER WHERE email = ?", [email], async function (err, rows, fields) {
-        if (!err) {
-          if (!rows.length) {
-            console.log(111);
-            maria.query(
-              "INSERT INTO USER(name, email, hashedPassword) VALUES(?,?,'kakao')",
-              [result.data.kakao_account.profile.nickname, email],
-              async function (err, rows2, fields) {
-                const token = jwt.sign(
-                  {
-                    id: rows2.insertId,
-                    access_token: access_token,
-                  },
-                  secretKey,
-                );
-                res.status(200).json({
-                  success: true,
-                  name: result.data.kakao_account.profile.nickname,
-                  email: email,
-                  token: token,
-                });
-              },
-            );
-          } else {
+      maria((err, conn) => {
+        conn.query("SELECT * FROM USER WHERE email = ?", [email], async (err, rows) => {
+          conn.release();
+          if (err) {
+            return res.status(400).send(err);
+          }
+
+          if (rows.length) {
             const token = jwt.sign({ id: rows[0].id, access_token: access_token }, secretKey);
-            res.status(200).json({
+            return res.status(200).json({
               success: true,
               id: rows[0].id,
               name: result.data.kakao_account.profile.nickname,
@@ -113,8 +97,67 @@ router.get("/kakao/info/:access_token", async function (req, res, next) {
               token: token,
             });
           }
-        }
+
+          maria((err, conn) => {
+            conn.query(
+              "INSERT INTO USER(name, email, hashedPassword) VALUES(?,?,'kakao')",
+              [result.data.kakao_account.profile.nickname, email],
+              (err, rows) => {
+                conn.release();
+                const token = jwt.sign(
+                  {
+                    id: rows.insertId,
+                    access_token: access_token,
+                  },
+                  secretKey,
+                );
+                return res.status(200).json({
+                  success: true,
+                  name: result.data.kakao_account.profile.nickname,
+                  email: email,
+                  token: token,
+                });
+              },
+            );
+          });
+        });
       });
+
+      // maria.query("SELECT * FROM USER WHERE email = ?", [email], async function (err, rows, fields) {
+      //   if (!err) {
+      // if (!rows.length) {
+      //   console.log(111);
+      //   maria.query(
+      //     "INSERT INTO USER(name, email, hashedPassword) VALUES(?,?,'kakao')",
+      //     [result.data.kakao_account.profile.nickname, email],
+      //     async function (err, rows2, fields) {
+      //       const token = jwt.sign(
+      //         {
+      //           id: rows2.insertId,
+      //           access_token: access_token,
+      //         },
+      //         secretKey,
+      //       );
+      //       res.status(200).json({
+      //         success: true,
+      //         name: result.data.kakao_account.profile.nickname,
+      //         email: email,
+      //         token: token,
+      //       });
+      //     },
+      //   );
+      //     } else {
+      //       const token = jwt.sign({ id: rows[0].id, access_token: access_token }, secretKey);
+      //       res.status(200).json({
+      //         success: true,
+      //         id: rows[0].id,
+      //         name: result.data.kakao_account.profile.nickname,
+      //         email: email,
+      //         token: token,
+      //       });
+      //     }
+      //   }
+      // });
     })
     .catch(e => {
       res.send(e);
@@ -139,15 +182,29 @@ router.get("/naver", async function (req, res, next) {
       const name = result.data.response.name;
       const email = result.data.response.email;
 
-      maria.query("SELECT * FROM USER WHERE email = ?", [email], async function (err, rows, fields) {
-        if (!err) {
-          if (!rows.length) {
-            maria.query(
+      maria((err, conn) => {
+        conn.query("SELECT * FROM USER WHERE email = ?", [email], async (err, rows) => {
+          conn.release();
+          if (err) {
+            return res.status(400).send(err);
+          }
+
+          if (rows.length) {
+            const token = jwt.sign({ id: rows[0].id, access_token: access_token }, secretKey);
+            console.log(token);
+            return res
+              .status(200)
+              .json({ success: true, id: rows[0].id, name: rows[0].name, email: rows[0].email, token: token });
+          }
+
+          maria((err, conn) => {
+            conn.query(
               "INSERT INTO USER(name, email, hashedPassword) VALUES(?,?,'naver')",
               [name, email],
-              async function (err, rows2, fields) {
-                const token = jwt.sign({ id: rows2.insertId, access_token: access_token }, secretKey);
-                res.status(200).json({
+              (err, rows) => {
+                conn.release();
+                const token = jwt.sign({ id: rows.insertId, access_token: access_token }, secretKey);
+                return res.status(200).json({
                   success: true,
                   name: result.data.kakao_account.profile.nickname,
                   email: email,
@@ -155,15 +212,35 @@ router.get("/naver", async function (req, res, next) {
                 });
               },
             );
-          } else {
-            const token = jwt.sign({ id: rows[0].id, access_token: access_token }, secretKey);
-            console.log(token);
-            res
-              .status(200)
-              .json({ success: true, id: rows[0].id, name: rows[0].name, email: rows[0].email, token: token });
-          }
-        }
+          });
+        });
       });
+
+      // maria.query("SELECT * FROM USER WHERE email = ?", [email], async function (err, rows, fields) {
+      //   if (!err) {
+      //     if (!rows.length) {
+      //       maria.query(
+      //         "INSERT INTO USER(name, email, hashedPassword) VALUES(?,?,'naver')",
+      //         [name, email],
+      //         async function (err, rows2, fields) {
+      //           const token = jwt.sign({ id: rows2.insertId, access_token: access_token }, secretKey);
+      //           res.status(200).json({
+      //             success: true,
+      //             name: result.data.kakao_account.profile.nickname,
+      //             email: email,
+      //             token: token,
+      //           });
+      //         },
+      //       );
+      //     } else {
+      //       const token = jwt.sign({ id: rows[0].id, access_token: access_token }, secretKey);
+      //       console.log(token);
+      //       res
+      //         .status(200)
+      //         .json({ success: true, id: rows[0].id, name: rows[0].name, email: rows[0].email, token: token });
+      //     }
+      //   }
+      // });
     })
     // .then(result => {
     //   res.status(200).json(result);
