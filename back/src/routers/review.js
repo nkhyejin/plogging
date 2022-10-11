@@ -9,43 +9,51 @@ const login_required = require("../middlewares/login_required");
 const maria = require("../db/connect/maria");
 
 /* GET home page. */
-router.get("/", function (req, res, next) {
-  res.render("index", { title: "Review" });
-});
+// router.get("/", function (req, res, next) {
+//   res.render("index", { title: "Review" });
+// });
 
 router.get("/", function (req, res) {
-  maria.query("SELECT * FROM REVIEW", function (err, rows, fields) {
-    if (!err) {
-      res.send(rows);
-    } else {
-      console.log("err : " + err);
-      res.send(err);
-    }
+  maria((err, conn) => {
+    conn.query("SELECT * FROM REVIEW", (err, rows) => {
+      conn.release();
+      if (!err) {
+        res.send(rows);
+      } else {
+        console.log("err : " + err);
+        res.status(400).send(err);
+      }
+    });
   });
 });
 
 router.get("/:reviewId", function (req, res) {
   const reviewId = req.params.reviewId;
-  maria.query("SELECT * FROM REVIEW WhERE reviewId = ?", [reviewId], function (err, rows, fields) {
-    if (!err) {
-      res.send(rows);
-    } else {
-      console.log("err : " + err);
-      res.send(err);
-    }
+
+  maria((err, conn) => {
+    conn.query("SELECT * FROM REVIEW WhERE reviewId = ?", [reviewId], (err, rows) => {
+      conn.release();
+      if (!err) {
+        res.send(rows);
+      } else {
+        console.log("err : " + err);
+        res.status(400).send(err);
+      }
+    });
   });
 });
 
 // 리뷰 작성
-router.post("/create", login_required, async function (req, res, next) {
+router.post("/create", login_required, function (req, res, next) {
   const userId = req.currentUserId;
-  try {
-    const { title, description, createAt } = req.body;
+  const { title, description, createAt } = req.body;
 
-    maria.query(
+  maria((err, conn) => {
+    conn.query(
       `INSERT INTO REVIEW(userId, title, description, createAt) VALUES(?,?,?,?)`,
       [userId, title, description, createAt],
-      function (err, rows, fields) {
+      (err, rows) => {
+        conn.release();
         if (!err) {
           res.status(200).json({
             success: true,
@@ -57,43 +65,41 @@ router.post("/create", login_required, async function (req, res, next) {
           });
         } else {
           console.log("err : " + err);
-          res.send(err);
+          res.status(400).send(err);
         }
       },
     );
-  } catch (error) {
-    next(error);
-  }
+  });
 });
 
 // 빈 값이 들어오면 에러가 아니라 수정만 안 하도록 바꾸기
-router.put("/:reviewId", login_required, async function (req, res, next) {
-  try {
-    const reviewer = req.body.userId;
-    const userId = req.currentUserId;
-    if (reviewer !== userId) {
-      return res.sendStatus(432);
-    }
-    const title = req.body.title ?? null;
-    const description = req.body.description ?? null;
-    const reviewId = req.params.reviewId;
-    maria.query(
+router.put("/:reviewId", login_required, function (req, res) {
+  const reviewer = req.body.userId;
+  const userId = req.currentUserId;
+
+  if (reviewer !== userId) {
+    return res.sendStatus(432);
+  }
+
+  const title = req.body.title ?? null;
+  const description = req.body.description ?? null;
+  const reviewId = req.params.reviewId;
+
+  maria((err, conn) => {
+    conn.query(
       `UPDATE REVIEW SET title = ?, description = ? WHERE reviewId = ?`,
       [title, description, reviewId],
-      async function (err, rows, fields) {
+      (err, rows) => {
+        conn.release();
         if (!err) {
-          res.status(200).json({
-            success: true,
-          });
+          res.sendStatus(200);
         } else {
           console.log("err : " + err);
-          res.send(err);
+          res.status(400).send(err);
         }
       },
     );
-  } catch (error) {
-    next(error);
-  }
+  });
 });
 
 // router.delete("/delete", login_required, async function (req, res, next) {

@@ -4,24 +4,30 @@ var router = express.Router();
 const maria = require("../db/connect/maria");
 
 router.get("/", function (req, res) {
-  maria.query("SELECT * FROM TRASHCAN", function (err, rows, fields) {
-    if (!err) {
-      res.send(rows);
-    } else {
-      console.log("err : " + err);
-      res.send(err);
-    }
+  maria((err, conn) => {
+    conn.query("SELECT * FROM TRASHCAN", (err, rows) => {
+      conn.release();
+      if (!err) {
+        res.send(rows);
+      } else {
+        console.log("err : " + err);
+        res.status(400).send(err);
+      }
+    });
   });
 });
 
 router.get("/count", function (req, res) {
-  maria.query("SELECT * FROM TRASHCOUNT", function (err, rows, fields) {
-    if (!err) {
-      res.send(rows);
-    } else {
-      console.log("err : " + err);
-      res.send(err);
-    }
+  maria((err, conn) => {
+    conn.query("SELECT * FROM TRASHCOUNT", (err, rows) => {
+      conn.release();
+      if (!err) {
+        res.send(rows);
+      } else {
+        console.log("err : " + err);
+        res.status(400).send(err);
+      }
+    });
   });
 });
 

@@ -4,6 +4,7 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 var cors = require("cors");
+
 var indexRouter = require("./src/routers/index");
 var usersRouter = require("./src/routers/users");
 var trashRouter = require("./src/routers/trash");
@@ -11,14 +12,15 @@ var authRouter = require("./src/routers/auth");
 var reviewRouter = require("./src/routers/review");
 var dodreamRouter = require("./src/routers/dodream");
 
-const maria = require("./src/db/connect/maria");
 const errorMiddleware = require("./src/middlewares/error_middleware");
+
+// const maria = require("./src/db/connect/maria");
 
 const app = express();
 
 app.use(cors());
 
-maria.connect();
+// maria.connect();
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
