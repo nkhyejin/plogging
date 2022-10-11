@@ -99,7 +99,7 @@ router.delete("/delete", login_required, function (req, res, next) {
         return res.send(400).send(err);
       }
 
-      return res.status(200);
+      return res.sendStatus(200);
     });
   });
 });
@@ -112,7 +112,7 @@ router.put("/modify", login_required, function (req, res, next) {
     conn.query(`UPDATE USER SET name = ? WHERE id = ?`, [name, user_id], (err, rows) => {
       conn.release();
       if (!err) {
-        res.status(200);
+        res.sendStatus(200);
       } else {
         console.log("err : " + err);
         res.status(400).send(err);

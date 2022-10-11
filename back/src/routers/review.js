@@ -46,12 +46,12 @@ router.get("/:reviewId", function (req, res) {
 // 리뷰 작성
 router.post("/create", login_required, function (req, res, next) {
   const userId = req.currentUserId;
-  const { title, description, createAt } = req.body;
+  const { title, description, createAt, name } = req.body;
 
   maria((err, conn) => {
     conn.query(
-      `INSERT INTO REVIEW(userId, title, description, createAt) VALUES(?,?,?,?)`,
-      [userId, title, description, createAt],
+      `INSERT INTO REVIEW(userId, title, description, createAt, userName) VALUES(?,?,?,?,?)`,
+      [userId, title, description, createAt, name],
       (err, rows) => {
         conn.release();
         if (!err) {
@@ -61,6 +61,7 @@ router.post("/create", login_required, function (req, res, next) {
             description: description,
             createAt: createAt,
             userId: userId,
+            name: name,
             reviewId: rows.insertId,
           });
         } else {
@@ -102,23 +103,26 @@ router.put("/:reviewId", login_required, function (req, res) {
   });
 });
 
-// router.delete("/delete", login_required, async function (req, res, next) {
-//   try {
-//     const user_id = req.currentUserId;
+router.delete("/:reviewId", login_required, function (req, res, next) {
+  const reviewer = req.body.userId;
+  const userId = req.currentUserId;
+  const reviewId = req.params.reviewId;
 
-//     maria.query(` USER SET name = ? WHERE id = ?`, [name, user_id], async function (err, rows, fields) {
-//       if (!err) {
-//         res
-//           .status(200)
-//           .json({ success: true, success: true, email: email, name: rows[0].name, id: rows[0].id, token: token });
-//       } else {
-//         console.log("err : " + err);
-//         res.send(err);
-//       }
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// });
+  if (reviewer !== userId) {
+    return res.sendStatus(432);
+  }
+
+  maria((err, conn) => {
+    conn.query(`DELETE FROM REVIEW WHERE reviewId = ?`, [reviewId], (err, rows) => {
+      conn.release();
+      if (!err) {
+        res.sendStatus(200);
+      } else {
+        console.log("err : " + err);
+        res.status(400).send(err);
+      }
+    });
+  });
+});
 
 module.exports = router;
