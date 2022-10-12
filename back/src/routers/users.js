@@ -73,7 +73,7 @@ router.post("/login", function (req, res, next) {
         const isPasswordCorrect = await bcrypt.compare(password, correctPasswordHash);
 
         if (!isPasswordCorrect) {
-          return res.status(401);
+          return res.sendStatus(432);
         }
 
         const secretKey = process.env.JWT_SECRET_KEY;
@@ -81,7 +81,7 @@ router.post("/login", function (req, res, next) {
 
         res.status(200).json({ success: true, email: email, id: rows[0].id, token: token, name: rows[0].name });
       } else if (!err && !rows.length) {
-        res.status(401);
+        res.sendStatus(432);
       } else {
         res.status(400).send(err);
       }
