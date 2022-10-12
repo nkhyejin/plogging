@@ -1,9 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
-
 const jwt = require("jsonwebtoken");
-
 const login_required = require("../middlewares/login_required");
 
 const maria = require("../db/connect/maria");
@@ -46,22 +44,21 @@ router.get("/:reviewId", function (req, res) {
 // 리뷰 작성
 router.post("/create", login_required, function (req, res, next) {
   const userId = req.currentUserId;
-  const { title, description, createAt, name } = req.body;
+  const { description, createAt, userName } = req.body;
 
   maria((err, conn) => {
     conn.query(
-      `INSERT INTO REVIEW(userId, title, description, createAt, userName) VALUES(?,?,?,?,?)`,
-      [userId, title, description, createAt, name],
+      `INSERT INTO REVIEW(userId,  description, createAt, userName) VALUES(?,?,?,?,?)`,
+      [userId, description, createAt, userName],
       (err, rows) => {
         conn.release();
         if (!err) {
           res.status(200).json({
             success: true,
-            title: title,
             description: description,
             createAt: createAt,
             userId: userId,
-            name: name,
+            userName: userName,
             reviewId: rows.insertId,
           });
         } else {
@@ -82,24 +79,19 @@ router.put("/:reviewId", login_required, function (req, res) {
     return res.sendStatus(432);
   }
 
-  const title = req.body.title ?? null;
   const description = req.body.description ?? null;
   const reviewId = req.params.reviewId;
 
   maria((err, conn) => {
-    conn.query(
-      `UPDATE REVIEW SET title = ?, description = ? WHERE reviewId = ?`,
-      [title, description, reviewId],
-      (err, rows) => {
-        conn.release();
-        if (!err) {
-          res.sendStatus(200);
-        } else {
-          console.log("err : " + err);
-          res.status(400).send(err);
-        }
-      },
-    );
+    conn.query(`UPDATE REVIEW SET description = ? WHERE reviewId = ?`, [description, reviewId], (err, rows) => {
+      conn.release();
+      if (!err) {
+        res.sendStatus(200);
+      } else {
+        console.log("err : " + err);
+        res.status(400).send(err);
+      }
+    });
   });
 });
 
