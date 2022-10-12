@@ -20,7 +20,7 @@ export async function requestLogin(loginInfo: UserLoginForm) {
     });
     if (!data) return false;
     sessionStorage.setItem("userToken", data.token);
-    console.log("풀빛마실로그인", data);
+    console.log("풀빛마실로그인1", data);
     return data;
   } catch (err) {
     // alert("로그인 정보가 옳지 않습니다!");
