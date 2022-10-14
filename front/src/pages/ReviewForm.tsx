@@ -13,6 +13,10 @@ import ReviewModal from "@components/modal/ReviewCancelModal";
 import { Wrapper } from "@style/Container";
 
 export default function ReviewForm() {
+  /*
+    페이지 접근 권한에 대한 처리는 각 페이지에서 처리하지마시고, 아래 문서를 참고하셔서 전역 route에서 접근권한 처리를 해주세요.
+    https://jeonghwan-kim.github.io/dev/2020/03/20/role-based-react-router.html
+  */
   const user = useRecoilValue(userAtom);
   const navigate = useNavigate();
   const { state } = useLocation();
@@ -31,23 +35,6 @@ export default function ReviewForm() {
   const [imagePreview, setImagePreview] = useState<any>(); // any 말고??
   const [uploadImg, setUploadImg] = useState<any>(); // any 말고??
   const image = watch("reviewImg");
-
-  useEffect(() => {
-    setIsReviewCancelModal(false);
-    isEdit && setImagePreview(review.reviewImg);
-    // isEdit && setUploadImg(review.reviewImg);
-  }, []);
-
-  useEffect(() => {
-    if (image && image.length > 0) {
-      const file = image[0];
-      console.log(image);
-      console.log(file);
-      console.log(typeof file);
-      setImagePreview(window.URL.createObjectURL(file));
-      setUploadImg(file);
-    }
-  }, [image]);
 
   const handleSubmitReview = handleSubmit(data => {
     // console.log("click");
