@@ -73,7 +73,8 @@ export default function GreenCrew() {
                   <DetailDescription>{selectedGreenCrew?.level}</DetailDescription>
                 </CourseBox>
               </DescBox>
-              <GreenCrewMap greenCrew={selectedGreenCrew!} />
+              <div style={{ width: "50%", height: "100%", backgroundColor: "teal" }}></div>
+              {/* <GreenCrewMap greenCrew={selectedGreenCrew!} /> */}
               {/* <GreenCrewMap /> */}
             </FirstContainer>
             <SecondContainer>
