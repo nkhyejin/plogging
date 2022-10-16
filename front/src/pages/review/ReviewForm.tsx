@@ -1,6 +1,6 @@
 import { useForm, useWatch } from "react-hook-form";
 // import DatePicker from "react-datepicker";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import styled from "styled-components";
 import { motion } from "framer-motion";
 import { editReview, getOneReview, getReviews, createReview } from "@api/review";
@@ -112,43 +112,45 @@ export default function ReviewForm({ formProps }: { formProps: IReviewUpdateData
     setIsReviewCancelModal(true);
   };
   return (
-    <FormWrap>
-      <Form as="form" onSubmit={handleSubmitReview}>
-        <TitleBox>
-          <Title>풀빛마실 이야기</Title>
-          <SubTitle>
-            함께한
-            <DangerAccent> 생생한 경험</DangerAccent>를 공유해주세요!
-          </SubTitle>
-        </TitleBox>
-        <SelectInput as="select" height={40}>
-          <Option>근교산 자락길 모임1</Option>
-          <Option>근교산 자락길 모임2</Option>
-          <Option>근교산 자락길 모임3</Option>
-          <Option>근교산 자락길 모임4</Option>
-        </SelectInput>
+    <Suspense fallback={<div>로딩중</div>}>
+      <FormWrap>
+        <Form as="form" onSubmit={handleSubmitReview}>
+          <TitleBox>
+            <Title>풀빛마실 이야기</Title>
+            <SubTitle>
+              함께한
+              <DangerAccent> 생생한 경험</DangerAccent>를 공유해주세요!
+            </SubTitle>
+          </TitleBox>
+          <SelectInput as="select" height={40}>
+            <Option>근교산 자락길 모임1</Option>
+            <Option>근교산 자락길 모임2</Option>
+            <Option>근교산 자락길 모임3</Option>
+            <Option>근교산 자락길 모임4</Option>
+          </SelectInput>
 
-        <ImgBox as="label" htmlFor="input-file">
-          {image?.length ? <Img src={imagePreview} /> : <ImgIcon src="/assets/icon/image.png" />}
-        </ImgBox>
-        <input id="input-file" type="file" style={{ display: "none" }} {...register("reviewImg")} />
+          <ImgBox as="label" htmlFor="input-file">
+            {image?.length ? <Img src={imagePreview} /> : <ImgIcon src="/assets/icon/image.png" />}
+          </ImgBox>
+          <input id="input-file" type="file" style={{ display: "none" }} {...register("reviewImg")} />
 
-        <ReviewTextArea
-          placeholder="내용을 입력해주세요."
-          {...register("description", {
-            required: { value: true, message: "내용을 입력해주세요." },
-          })}
-        />
+          <ReviewTextArea
+            placeholder="내용을 입력해주세요."
+            {...register("description", {
+              required: { value: true, message: "내용을 입력해주세요." },
+            })}
+          />
 
-        <ButtonContainer>
-          <Button>{mode === "UPDATE" ? "수정하기" : "등록하기"}</Button>
-          <Button className="cancle" type="button" onClick={handleClickCancel}>
-            취소
-          </Button>
-        </ButtonContainer>
-        <ReviewModal />
-      </Form>
-    </FormWrap>
+          <ButtonContainer>
+            <Button>{mode === "UPDATE" ? "수정하기" : "등록하기"}</Button>
+            <Button className="cancle" type="button" onClick={handleClickCancel}>
+              취소
+            </Button>
+          </ButtonContainer>
+          <ReviewModal />
+        </Form>
+      </FormWrap>
+    </Suspense>
   );
 }
 

@@ -1,6 +1,6 @@
 import { ReviewDeleteIdAtom } from "@atom/atom";
 import { AnimatePresence } from "framer-motion";
-import React, { useEffect } from "react";
+import React, { useEffect, Suspense } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
 import styled from "styled-components";
 import { Overlay, OverlayVariant } from "./LoginModal";
@@ -43,30 +43,32 @@ export default function ReviewDeleteModal({ reviewId }: { reviewId: number }) {
 
   return (
     <AnimatePresence>
-      {reviewDelId && (
-        <ReviewModalWrap>
-          <ReviewModalContainer>
-            <DeleteDesc>
-              <Accent>삭제</Accent> 하시겠습니까?
-            </DeleteDesc>
-            <BtnContainer>
-              <DeleteBtn type="button" onClick={handleClickConfirm}>
-                네
-              </DeleteBtn>
-              <CloseBtn type="button" onClick={handleClickCancel}>
-                아니요
-              </CloseBtn>
-            </BtnContainer>
-          </ReviewModalContainer>
-          <Overlay
-            onClick={handleClickCancel}
-            variants={OverlayVariant}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-          />
-        </ReviewModalWrap>
-      )}
+      <Suspense fallback={<div>로딩중</div>}>
+        {reviewDelId && (
+          <ReviewModalWrap>
+            <ReviewModalContainer>
+              <DeleteDesc>
+                <Accent>삭제</Accent> 하시겠습니까?
+              </DeleteDesc>
+              <BtnContainer>
+                <DeleteBtn type="button" onClick={handleClickConfirm}>
+                  네
+                </DeleteBtn>
+                <CloseBtn type="button" onClick={handleClickCancel}>
+                  아니요
+                </CloseBtn>
+              </BtnContainer>
+            </ReviewModalContainer>
+            <Overlay
+              onClick={handleClickCancel}
+              variants={OverlayVariant}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            />
+          </ReviewModalWrap>
+        )}
+      </Suspense>
     </AnimatePresence>
   );
 }
