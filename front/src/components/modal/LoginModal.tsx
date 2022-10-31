@@ -1,24 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import styled from "styled-components";
-import { useRecoilState, useRecoilValue } from "recoil";
-import { curUserAtom, isLoginModalAtom, isLoginSelector } from "@atom/atom";
-import { Link, useMatch, useNavigate } from "react-router-dom";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { isLoginModalAtom, isWelcomeModalAtom } from "@atom/atom";
+import { isLoginSelector } from "@atom/user";
+import { Link, useLocation, useMatch, useNavigate } from "react-router-dom";
 
-import { requestLogin } from "@api/api";
+import { kakaoLogin, requestLogin } from "@api/user";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye } from "@fortawesome/free-regular-svg-icons";
 import { faEyeSlash } from "@fortawesome/free-solid-svg-icons";
-import { faXing } from "@fortawesome/free-brands-svg-icons";
 import { motion, AnimatePresence } from "framer-motion";
-import NaverLoginFunction from "./NaverLogin";
+import { userAtom } from "@atom/user";
+import NaverLoginBtn from "../NaverLoginBtn";
+import { UserLoginForm } from "@type/user";
+import { createPortal } from "react-dom";
+import { ModalWrap as LoginModalWrap, ModalContainer as LoginForm, ModalTitle as LoginTitle } from "@style/ModalStyle";
 
-interface LoginInfo {
-  email: string;
-  password: string;
-  name?: string;
-}
-const ModalVariant = {
+export const ModalVariant = {
   initial: {
     y: 30,
     opacity: 0,
@@ -38,7 +37,7 @@ const ModalVariant = {
     },
   },
 };
-const OverlayVariant = {
+export const OverlayVariant = {
   initial: {
     opacity: 0,
   },
@@ -54,52 +53,67 @@ const OverlayVariant = {
 };
 
 export default function LoginModal() {
-  const navigate = useNavigate();
+  const { pathname } = useLocation();
   const {
     register,
     formState: { errors },
     handleSubmit,
-  } = useForm<LoginInfo>({ mode: "onChange" });
+    reset,
+  } = useForm<UserLoginForm>({ mode: "onChange" });
   const [isLoginModal, setIsLoginModal] = useRecoilState(isLoginModalAtom);
   const isLogin = useRecoilValue(isLoginSelector);
   const [isViewPassword, setIsViewPassword] = useState(false);
   const navigator = useNavigate();
   const match = useMatch("/register");
-  const onClickViewPassword = () => {
+  const setIsWelcomeModal = useSetRecoilState(isWelcomeModalAtom);
+  const handleClickViewPassword = () => {
     setIsViewPassword(cur => !cur);
   };
-  const [curUser, setCurUser] = useRecoilState(curUserAtom);
-  //회원가입 페이지 이동시 모달창 꺼짐
-  useEffect(() => {
-    if (match) setIsLoginModal(prev => !prev);
-  }, [match]);
+  const [curUser, setCurUser] = useRecoilState(userAtom);
 
-  const REST_API_KEY = process.env.REACT_APP_KAKAO_LOGIN_API;
+  // 카카오 로그인
+  const REST_API_KEY = process.env.REACT_APP_KAKAO_API;
   const REDIRECT_URI = process.env.REACT_APP_KAKAO_REDIRECT_URI;
-
   const KAKAO_AUTH_URL = `https://kauth.kakao.com/oauth/authorize?client_id=${REST_API_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code`;
-  const onClickKakao = () => {
-    // navigate(KAKAO_AUTH_URL);
+  const handleClickKakao = () => {
     window.location.href = KAKAO_AUTH_URL;
+    const href = window.location.href;
+    let params = new URL(window.location.href).searchParams;
+    let code = params.get("code");
+    // console.log(code);
   };
 
-  const onvalid = async (data: LoginInfo) => {
-    const { email, name, token } = await requestLogin(data);
-    setCurUser({ email, name, token });
-    console.log(curUser);
+  const closeLoginModal = () => {
+    setIsLoginModal(false);
+    reset();
+  };
+  // 로그인 버튼 클릭 시
+  const onvalid = async (data: UserLoginForm) => {
+    const { id, email, name, token, social } = await requestLogin(data);
+    if (!email && !name && !token) {
+      alert("로그인 정보가 틀렸습니다.");
+      reset();
+    } else {
+      setIsWelcomeModal(true);
+    }
+    // console.log("풀빛마실 로그인, 넘어온 데이터\n", id, email, name, token);
+    setCurUser({ id, email, name, token, social });
+    console.log("--------------test");
+    console.log(id, email, name, token, social);
+    // console.log("풀빛마실 User상태\n", curUser);
   };
 
   //로그인 시 모달비활성화,홈으로 이동
   useEffect(() => {
     if (isLogin) {
-      setIsLoginModal(false);
-      navigator("/");
+      // navigator("/");
+      closeLoginModal();
     }
   }, [isLogin]);
   return (
     <AnimatePresence>
-      {isLoginModal && (
-        <Wrap>
+      {isLoginModal && !isLogin && (
+        <LoginModalWrap>
           <LoginForm
             onSubmit={handleSubmit(onvalid)}
             variants={ModalVariant}
@@ -107,7 +121,7 @@ export default function LoginModal() {
             animate="animate"
             exit="exit"
           >
-            <Title>로그인</Title>
+            <LoginTitle>로그인</LoginTitle>
             <EmailBox>
               <EmailInput
                 id="email"
@@ -142,26 +156,26 @@ export default function LoginModal() {
                   icon={isViewPassword ? faEye : faEyeSlash}
                   color="#2A9C6B"
                   style={{ cursor: "pointer" }}
-                  onClick={onClickViewPassword}
+                  onClick={handleClickViewPassword}
                 />
               </ViewPassword>
               <ErrorMessage>{errors.password?.message}</ErrorMessage>
             </PasswordBox>
             <LoginBtn>로그인</LoginBtn>
             <UserBox>
-              <Register>
+              <Register onClick={() => closeLoginModal()}>
                 <Link to="/register">회원가입 </Link>
               </Register>
 
-              <FindPassword>
+              <FindPassword onClick={() => closeLoginModal()}>
                 <Link to="/register">아이디,비밀번호 찾기</Link>
               </FindPassword>
             </UserBox>
             <SocialLoginBox>
-              <NaverLoginFunction />
-              <KakaoLogin onClick={onClickKakao}>카카오 로그인</KakaoLogin>
+              <NaverLoginBtn />
+              <KakaoLogin src="/assets/images/kakao_login_btn.png" onClick={handleClickKakao} />
             </SocialLoginBox>
-            <CloseBtn onClick={() => setIsLoginModal(prev => !prev)}>
+            <CloseBtn type="button" onClick={() => closeLoginModal()}>
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path
                   d="M19 3L11 11L3 19M3 3L19 19"
@@ -174,43 +188,18 @@ export default function LoginModal() {
             </CloseBtn>
           </LoginForm>
           <Overlay
-            onClick={() => setIsLoginModal(prev => !prev)}
+            onClick={() => closeLoginModal()}
             variants={OverlayVariant}
             initial="initial"
             animate="animate"
             exit="exit"
           />
-        </Wrap>
+        </LoginModalWrap>
       )}
     </AnimatePresence>
   );
 }
 
-const Wrap = styled.div`
-  position: fixed;
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
-const LoginForm = styled(motion.form)`
-  position: relative;
-  z-index: 1000;
-  width: 600px;
-  height: 570px;
-  background-color: white;
-  display: flex;
-  flex-direction: column;
-  border-radius: 10px;
-  align-items: center;
-`;
-const Title = styled.h1`
-  margin-top: 70px;
-  margin-bottom: 24px;
-  font-size: 32px;
-  color: ${props => props.theme.mainColor};
-`;
 const EmailBox = styled.div`
   display: flex;
   width: 440px;
@@ -255,22 +244,23 @@ const ErrorMessage = styled.div`
   right: 0;
 `;
 
-const ViewPassword = styled.div`
+export const ViewPassword = styled.div`
   position: absolute;
   height: 60px;
   right: 10px;
   display: flex;
   align-items: center;
 `;
-const Overlay = styled(motion.div)`
+export const Overlay = styled(motion.div)`
   z-index: 100;
   position: fixed;
   left: 0px;
+  top: 0px;
   width: 100vw;
   height: 100vh;
   background-color: rgba(0, 0, 0, 0.3);
 `;
-const CloseBtn = styled.button`
+export const CloseBtn = styled.button`
   display: flex;
   justify-content: center;
   align-items: center;
@@ -291,16 +281,12 @@ const LoginBtn = styled.button`
 const SocialLoginBox = styled(UserBox)`
   justify-content: space-between;
 `;
-export const NaverLogin = styled(LoginBtn)`
-  width: 210px;
-  border-radius: 5px;
-  font-family: "Sebang";
-  background-color: #03c75a;
-`;
-export const KakaoLogin = styled(NaverLogin)`
-  color: #402325;
-  background-color: #ffe500;
+
+export const NaverLogin = styled.img`
+  cursor: pointer;
+  transition: all 0.4s ease;
   &:hover {
-    background-color: #ebd832;
+    filter: brightness(0.9);
   }
 `;
+export const KakaoLogin = styled(NaverLogin)``;

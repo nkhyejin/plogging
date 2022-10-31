@@ -1,27 +1,26 @@
+import { IReview } from "@type/review";
 import { atom, selector } from "recoil";
-import { recoilPersist } from "recoil-persist";
 
-const { persistAtom } = recoilPersist();
-
-export const isLoginSelector = selector({
-  key: "isLogin",
-  get: ({ get }) => {
-    const curUser = get(curUserAtom);
-    const checkLogin = sessionStorage.getItem("userToken") && curUser?.token ? true : false;
-    return checkLogin;
-  },
-});
 export const isLoginModalAtom = atom({
   key: "isLoginModal",
   default: false,
 });
-interface CurUser {
-  email: string;
-  name: string;
-  token: string;
-}
-export const curUserAtom = atom<CurUser | null>({
-  key: "curUser",
+export const isLogoutModalAtom = atom({
+  key: "isLogoutModal",
+  default: false,
+});
+export const isWelcomeModalAtom = atom({
+  key: "isWelcomeModal",
+  default: false,
+});
+
+//Review
+export const ReviewDeleteIdAtom = atom<number | null>({
+  key: "reviewDeleteId",
   default: null,
-  effects_UNSTABLE: [persistAtom],
+});
+
+export const isReviewCancelAtom = atom({
+  key: "isReviewCancelModal",
+  default: false,
 });
